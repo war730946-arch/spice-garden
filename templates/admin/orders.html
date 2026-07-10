@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Manage Orders - {{ restaurant_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    body { background: #F0F0F0; }
+    .top-bar, .navbar, .footer { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <i class="fas fa-utensils"></i>
+            <span>{{ restaurant_name }}</span>
+        </div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}" class="active"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_admins') }}"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>View Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1><i class="fas fa-shopping-bag" style="color:var(--gold);"></i> Orders</h1>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px;">
+            <a href="{{ url_for('admin_orders') }}" class="btn btn-sm {% if not current_filter %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+            <a href="{{ url_for('admin_orders', status='pending') }}" class="btn btn-sm {% if current_filter == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">Pending</a>
+            <a href="{{ url_for('admin_orders', status='confirmed') }}" class="btn btn-sm {% if current_filter == 'confirmed' %}btn-primary{% else %}btn-outline{% endif %}">Confirmed</a>
+            <a href="{{ url_for('admin_orders', status='preparing') }}" class="btn btn-sm {% if current_filter == 'preparing' %}btn-primary{% else %}btn-outline{% endif %}">Preparing</a>
+            <a href="{{ url_for('admin_orders', status='ready') }}" class="btn btn-sm {% if current_filter == 'ready' %}btn-primary{% else %}btn-outline{% endif %}">Ready</a>
+            <a href="{{ url_for('admin_orders', status='delivered') }}" class="btn btn-sm {% if current_filter == 'delivered' %}btn-primary{% else %}btn-outline{% endif %}">Delivered</a>
+            <a href="{{ url_for('admin_orders', status='cancelled') }}" class="btn btn-sm {% if current_filter == 'cancelled' %}btn-danger{% else %}btn-outline{% endif %}">Cancelled</a>
+        </div>
+
+        {% if orders %}
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>
+                            {{ order.customer_name }}
+                            {% if order.customer_email %}<br><small style="color:var(--gray-500);">{{ order.customer_email }}</small>{% endif %}
+                        </td>
+                        <td>{{ order.customer_phone }}</td>
+                        <td>
+                            {% for item in order.items %}
+                            <div>{{ item.item_name }} x {{ item.quantity }}</div>
+                            {% endfor %}
+                        </td>
+                        <td><strong style="color:var(--maroon);">Rs. {{ "%.0f"|format(order.total_amount) }}</strong></td>
+                        <td><span style="text-transform:uppercase;font-size:0.8rem;font-weight:600;">{{ order.payment_method }}</span></td>
+                        <td><span class="status-badge status-{{ order.status }}">{{ order.status }}</span></td>
+                        <td><small>{{ order.order_date.strftime('%b %d, %H:%M') }}</small></td>
+                        <td>
+                            <div class="admin-table-actions" style="flex-direction:column;gap:5px;">
+                                <form method="POST" action="{{ url_for('admin_update_order_status', id=order.id) }}" style="display:flex;gap:5px;">
+                                    <select name="status" style="padding:4px 8px;border:1px solid var(--gray-300);border-radius:4px;font-size:0.8rem;">
+                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                        <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>Preparing</option>
+                                        <option value="ready" {% if order.status == 'ready' %}selected{% endif %}>Ready</option>
+                                        <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                        <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-gold"><i class="fas fa-save"></i></button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_delete_order', id=order.id) }}" onsubmit="return confirm('Delete this order?')">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="admin-card" style="text-align:center;padding:60px;">
+            <i class="fas fa-shopping-bag" style="font-size:3rem;color:var(--gray-300);margin-bottom:15px;"></i>
+            <h3 style="color:var(--gray-500);">No orders found</h3>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

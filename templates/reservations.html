@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Reservations - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-calendar-alt"></i> Table Reservations</h1>
+        <p>Book your table for a memorable dining experience</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="reservation-wrapper">
+            <div class="reservation-info animate-slide-right">
+                <h2>Reserve Your Table</h2>
+                <p>Whether it's a romantic dinner, family gathering, or business meeting, we'll make sure your experience is perfect. Book your table in advance to avoid waiting.</p>
+
+                <div class="reservation-details">
+                    <h3><i class="fas fa-info-circle" style="color:var(--gold);"></i> Reservation Info</h3>
+                    <ul>
+                        <li><i class="fas fa-clock"></i> Reservations available from 11:00 AM to 10:00 PM</li>
+                        <li><i class="fas fa-users"></i> Tables for 1-20 guests available</li>
+                        <li><i class="fas fa-phone"></i> For urgent bookings, call {{ restaurant_phone }}</li>
+                        <li><i class="fas fa-envelope"></i> Email: {{ restaurant_email }}</li>
+                        <li><i class="fas fa-map-marker-alt"></i> {{ restaurant_address }}</li>
+                        <li><i class="fas fa-concierge-bell"></i> Special arrangements available for events</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top:30px;padding:25px;background:var(--cream);border-radius:var(--radius-md);border-left:4px solid var(--gold);">
+                    <h4 style="font-family:var(--font-heading);margin-bottom:8px;"><i class="fas fa-star" style="color:var(--gold);"></i> Special Events</h4>
+                    <p style="color:var(--gray-600);font-size:0.9rem;">Planning a birthday party, anniversary, or corporate event? Contact us for special packages and personalized arrangements.</p>
+                </div>
+            </div>
+
+            <div>
+                <form method="POST" action="{{ url_for('reservations') }}" style="background:var(--white);padding:35px;border-radius:var(--radius-md);box-shadow:var(--shadow-md);">
+                    <h3 style="font-family:var(--font-heading);margin-bottom:20px;text-align:center;">Book a Table</h3>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user" style="color:var(--gold);"></i> Full Name *</label>
+                        <input type="text" name="name" required placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone" style="color:var(--gold);"></i> Phone *</label>
+                            <input type="tel" name="phone" required placeholder="+92 3XX XXXXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope" style="color:var(--gold);"></i> Email</label>
+                            <input type="email" name="email" placeholder="your@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar" style="color:var(--gold);"></i> Date *</label>
+                            <input type="date" name="date" required min="{{ current_year }}-01-01">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-clock" style="color:var(--gold);"></i> Time *</label>
+                            <input type="time" name="time" required min="11:00" max="22:00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-users" style="color:var(--gold);"></i> Number of Guests *</label>
+                        <select name="guests" required>
+                            <option value="1">1 Guest</option>
+                            <option value="2" selected>2 Guests</option>
+                            <option value="3">3 Guests</option>
+                            <option value="4">4 Guests</option>
+                            <option value="5">5 Guests</option>
+                            <option value="6">6 Guests</option>
+                            <option value="7">7 Guests</option>
+                            <option value="8">8 Guests</option>
+                            <option value="10">10 Guests</option>
+                            <option value="12">12 Guests</option>
+                            <option value="15">15 Guests</option>
+                            <option value="20">20+ Guests (Event)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-comment" style="color:var(--gold);"></i> Special Requests</label>
+                        <textarea name="special_requests" placeholder="Birthday celebration, wheelchair access, specific seating preference, etc." rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-calendar-check"></i> Confirm Reservation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

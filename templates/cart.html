@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% block title %}Your Cart - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-shopping-cart"></i> Your Cart</h1>
+        <p>Review your items and proceed to checkout</p>
+    </div>
+</section>
+
+<section class="section cart-section">
+    <div class="container">
+        <div id="cartContent" class="animate-on-scroll"></div>
+    </div>
+</section>
+
+<script>
+function loadCart() {
+    fetch('/api/cart')
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById('cartContent');
+            if (!data.cart || data.cart.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h2>Your cart is empty</h2>
+                        <p style="color:var(--gray-500);margin-bottom:20px;">Looks like you haven't added any items yet.</p>
+                        <a href="{{ url_for('menu_page') }}" class="btn btn-primary"><i class="fas fa-utensils"></i> Browse Menu</a>
+                    </div>`;
+                return;
+            }
+
+            let itemsHtml = data.cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-img" style="background-image:url('${item.image_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop'}');"></div>
+                    <div class="cart-item-info">
+                        <h3>${item.name}</h3>
+                        ${item.modifiers && item.modifiers.length ? '<p style="font-size:0.8rem;color:var(--gray-500);">'+item.modifiers.join(', ')+'</p>' : ''}
+                        ${item.special_instructions ? '<p style="font-size:0.8rem;color:var(--gray-400);font-style:italic;">'+item.special_instructions+'</p>' : ''}
+                        <p style="color:var(--gold);font-weight:700;">Rs. ${item.price.toFixed(0)} each</p>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button onclick="changeQty(${item.item_id}, ${item.quantity - 1})"><i class="fas fa-minus"></i></button>
+                        <span>${item.quantity}</span>
+                        <button onclick="changeQty(${item.item_id}, ${item.quantity + 1})"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div class="cart-item-total">Rs. ${(item.price * item.quantity).toFixed(0)}</div>
+                    <button class="cart-item-remove" onclick="removeFromCart(${item.item_id})"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+
+            const freeDeliveryMsg = data.subtotal >= 1000 ? '<p style="color:#2E7D32;font-size:0.85rem;margin-top:10px;"><i class="fas fa-check-circle"></i> You qualify for free delivery!</p>' : `<p style="color:var(--gray-500);font-size:0.85rem;margin-top:10px;">Add Rs. ${(1000 - data.subtotal).toFixed(0)} more for free delivery</p>`;
+
+            container.innerHTML = `
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:30px;align-items:start;" class="cart-layout">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="font-family:var(--font-heading);">Cart Items (${data.cart_count})</h2>
+                            <button onclick="clearCart()" class="btn btn-sm" style="background:var(--gray-200);color:var(--gray-600);"><i class="fas fa-trash"></i> Clear All</button>
+                        </div>
+                        <div class="cart-items">${itemsHtml}</div>
+                    </div>
+                    <div>
+                        <!-- Order Summary -->
+                        <div class="cart-summary">
+                            <h3 style="font-family:var(--font-heading);margin-bottom:15px;">Order Summary</h3>
+                            <div class="cart-summary-row"><span>Subtotal</span><span>Rs. ${data.subtotal.toFixed(0)}</span></div>
+                            <div class="cart-summary-row"><span>Delivery</span><span>${data.delivery_fee === 0 ? '<span style="color:#2E7D32;font-weight:600;">FREE</span>' : 'Rs. '+data.delivery_fee}</span></div>
+                            ${data.discount > 0 ? `<div class="cart-summary-row" style="color:#2E7D32;"><span>Discount</span><span>- Rs. ${data.discount.toFixed(0)}</span></div>` : ''}
+                            <div class="cart-summary-row total"><span>Total</span><span>Rs. ${data.total.toFixed(0)}</span></div>
+                            ${freeDeliveryMsg}
+                        </div>
+
+                        <!-- Promo Code -->
+                        <div class="promo-section" style="background:var(--white);padding:20px;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-top:15px;">
+                            <h4 style="font-family:var(--font-heading);margin-bottom:10px;"><i class="fas fa-tag" style="color:var(--gold);"></i> Promo Code</h4>
+                            {% if promo_code and promo_code.code %}
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#E8F5E9;border-radius:8px;">
+                                <i class="fas fa-check-circle" style="color:#2E7D32;"></i>
+                                <span style="flex:1;font-weight:600;">{{ promo_code.code }}</span>
+                                <span style="color:#2E7D32;">- Rs. {{ "%.0f"|format(promo_code.discount_amount) }}</span>
+                                <button onclick="removePromo()" style="background:none;border:none;color:#C62828;cursor:pointer;"><i class="fas fa-times"></i></button>
+                            </div>
+                            {% else %}
+                            <div style="display:flex;gap:8px;">
+                                <input type="text" id="promoInput" placeholder="Enter code" style="flex:1;padding:10px 15px;border:2px solid var(--gray-200);border-radius:8px;font-size:0.9rem;">
+                                <button onclick="applyPromo()" class="btn btn-sm btn-gold">Apply</button>
+                            </div>
+                            <div id="promoMessage" style="margin-top:8px;font-size:0.85rem;"></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Checkout Form -->
+                        <div class="checkout-form" style="margin-top:15px;">
+                            <h3 style="font-family:var(--font-heading);margin-bottom:15px;">Checkout Details</h3>
+                            <form action="{{ url_for('checkout') }}" method="POST">
+                                <!-- Order Type -->
+                                <div class="form-group">
+                                    <label><i class="fas fa-shopping-bag" style="color:var(--gold);"></i> Order Type</label>
+                                    <div class="order-type-selector">
+                                        <label class="order-type-option active" onclick="selectOrderType(this, 'delivery')">
+                                            <input type="radio" name="order_type" value="delivery" checked>
+                                            <i class="fas fa-motorcycle"></i>
+                                            <span>Delivery</span>
+                                        </label>
+                                        <label class="order-type-option" onclick="selectOrderType(this, 'pickup')">
+                                            <input type="radio" name="order_type" value="pickup">
+                                            <i class="fas fa-store"></i>
+                                            <span>Pickup</span>
+                                        </label>
+                                        <label class="order-type-option" onclick="selectOrderType(this, 'dinein')">
+                                            <input type="radio" name="order_type" value="dinein">
+                                            <i class="fas fa-utensils"></i>
+                                            <span>Dine-In</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-user" style="color:var(--gold);"></i> Full Name *</label>
+                                        <input type="text" name="customer_name" required placeholder="Your full name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-phone" style="color:var(--gold);"></i> Phone *</label>
+                                        <input type="tel" name="customer_phone" required placeholder="+92 3XX XXXXXXX">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-envelope" style="color:var(--gold);"></i> Email</label>
+                                    <input type="email" name="customer_email" placeholder="your@email.com">
+                                </div>
+                                <div class="form-group" id="addressField">
+                                    <label><i class="fas fa-map-marker-alt" style="color:var(--gold);"></i> Delivery Address *</label>
+                                    <textarea name="delivery_address" placeholder="Full delivery address" rows="2" id="deliveryAddress"></textarea>
+                                </div>
+
+                                <!-- Scheduled Order -->
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-clock" style="color:var(--gold);"></i> Schedule Order (Optional)</label>
+                                    <input type="datetime-local" name="scheduled_time" id="scheduledTime" style="width:100%;padding:10px 15px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font-body);">
+                                    <small style="color:var(--gray-500);font-size:0.8rem;">Leave empty for ASAP delivery</small>
+                                </div>
+
+                                <!-- Tipping -->
+                                <div class="form-group">
+                                    <label><i class="fas fa-hand-holding-usd" style="color:var(--gold);"></i> Tip for Rider (Optional)</label>
+                                    <div class="tip-options">
+                                        <button type="button" class="tip-btn" onclick="selectTip(0, this)">No Tip</button>
+                                        <button type="button" class="tip-btn" onclick="selectTip(30, this)">Rs. 30</button>
+                                        <button type="button" class="tip-btn active" onclick="selectTip(50, this)">Rs. 50</button>
+                                        <button type="button" class="tip-btn" onclick="selectTip(100, this)">Rs. 100</button>
+                                        <button type="button" class="tip-btn" onclick="selectTip(0, this);document.getElementById('customTip').focus();">Custom</button>
+                                    </div>
+                                    <input type="hidden" name="tip" id="tipAmount" value="50">
+                                    <input type="number" id="customTip" placeholder="Custom amount" style="width:100%;padding:8px 12px;border:2px solid var(--gray-200);border-radius:8px;font-size:0.9rem;margin-top:8px;display:none;" oninput="document.getElementById('tipAmount').value=this.value;">
+                                </div>
+
+                                <!-- Payment Method -->
+                                <div class="form-group">
+                                    <label><i class="fas fa-credit-card" style="color:var(--gold);"></i> Payment Method</label>
+                                    <select name="payment_method">
+                                        <option value="cod">Cash on Delivery</option>
+                                        <option value="online">Online Payment</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label><i class="fas fa-comment" style="color:var(--gold);"></i> Special Instructions</label>
+                                    <textarea name="notes" placeholder="Any special requests for your order..." rows="2"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:16px;">
+                                    <i class="fas fa-check-circle"></i> Place Order - Rs. <span id="checkoutTotal">{{ "%.0f"|format(promo_code.discount_amount if promo_code else 0) }}</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>`;
+            
+            document.getElementById('checkoutTotal').textContent = data.total.toFixed(0);
+        });
+}
+
+function changeQty(itemId, newQty) {
+    if (newQty < 1) { removeFromCart(itemId); } else { updateCartItem(itemId, newQty); }
+}
+
+function clearCart() {
+    if (!confirm('Clear all items from cart?')) return;
+    fetch('/api/cart/clear', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => { updateCartCount(); loadCart(); });
+}
+
+function selectTip(amount, btn) {
+    document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tipAmount').value = amount;
+    document.getElementById('customTip').style.display = amount === 0 && btn.textContent.includes('Custom') ? 'block' : 'none';
+    if (!btn.textContent.includes('Custom')) document.getElementById('customTip').style.display = 'none';
+}
+
+function selectOrderType(el, type) {
+    document.querySelectorAll('.order-type-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    const addressField = document.getElementById('addressField');
+    if (type === 'delivery') {
+        addressField.style.display = 'block';
+        document.getElementById('deliveryAddress').required = true;
+    } else {
+        addressField.style.display = 'none';
+        document.getElementById('deliveryAddress').required = false;
+    }
+}
+
+function applyPromo() {
+    const code = document.getElementById('promoInput').value.trim();
+    if (!code) return;
+    fetch('/api/promo/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadCart();
+        } else {
+            document.getElementById('promoMessage').innerHTML = '<span style="color:#C62828;">' + data.error + '</span>';
+        }
+    });
+}
+
+function removePromo() {
+    fetch('/api/promo/remove', { method: 'POST' })
+        .then(r => r.json())
+        .then(() => { loadCart(); });
+}
+
+document.addEventListener('DOMContentLoaded', loadCart);
+</script>
+
+<style>
+.order-type-selector { display: flex; gap: 10px; }
+.order-type-option {
+    flex: 1; padding: 15px; text-align: center; border: 2px solid var(--gray-200);
+    border-radius: var(--radius-md); cursor: pointer; transition: var(--transition);
+}
+.order-type-option:hover { border-color: var(--gold); }
+.order-type-option.active { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+.order-type-option input { display: none; }
+.order-type-option i { font-size: 1.5rem; color: var(--gold); margin-bottom: 5px; display: block; }
+.order-type-option span { font-weight: 600; font-size: 0.9rem; }
+.tip-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.tip-btn {
+    padding: 8px 16px; border: 2px solid var(--gray-200); border-radius: 50px;
+    background: var(--white); cursor: pointer; font-size: 0.85rem; font-weight: 500;
+    transition: var(--transition); font-family: var(--font-body);
+}
+.tip-btn:hover { border-color: var(--gold); }
+.tip-btn.active { border-color: var(--gold); background: var(--gold); color: var(--brown); }
+.promo-section input { width: 100%; }
+</style>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}FAQ - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-question-circle"></i> Frequently Asked Questions</h1>
+        <p>Find answers to common questions about our restaurant and services</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container" style="max-width:800px;">
+        {% if faq_by_category %}
+            {% for category, faqs in faq_by_category.items() %}
+            <div class="faq-category mb-30 animate-on-scroll">
+                <h2 class="faq-category-title"><i class="fas fa-folder" style="color:var(--gold);"></i> {{ category }}</h2>
+                {% for faq in faqs %}
+                <div class="faq-item" onclick="this.classList.toggle('open')">
+                    <div class="faq-question">
+                        <span>{{ faq.question }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>{{ faq.answer }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center" style="color:var(--gray-500);">No FAQ available yet.</p>
+        {% endif %}
+
+        <div class="text-center mt-30">
+            <p style="color:var(--gray-600);">Still have questions?</p>
+            <a href="{{ url_for('contact') }}" class="btn btn-primary"><i class="fas fa-envelope"></i> Contact Us</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

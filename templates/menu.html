@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+{% block title %}Menu - {{ restaurant_name }}{% endblock %}
+{% block meta_description %}Explore our delicious menu at {{ restaurant_name }}. Starters, Main Course, Desserts, and Drinks - authentic Pakistani cuisine.{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-utensils"></i> Our Menu</h1>
+        <p>Explore our carefully crafted selection of authentic Pakistani dishes</p>
+    </div>
+</section>
+
+<!-- ─── Search & Filters ─── -->
+<section class="section" style="padding-top:30px;">
+    <div class="container">
+        <!-- Search Bar -->
+        <div class="menu-search-bar">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="menuSearch" placeholder="Search dishes... (e.g., Biryani, Kebab, Mango)" autocomplete="off">
+                <button class="search-clear-btn" id="searchClear" onclick="clearSearch()" style="display:none;"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <!-- Dietary Filters -->
+        <div class="filter-bar">
+            <div class="filter-chips">
+                <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">
+                    <i class="fas fa-globe"></i> All
+                </button>
+                <button class="filter-chip" data-filter="veg" onclick="setFilter('veg', this)">
+                    <i class="fas fa-leaf"></i> Vegetarian
+                </button>
+                <button class="filter-chip" data-filter="spicy" onclick="setFilter('spicy', this)">
+                    <i class="fas fa-fire"></i> Spicy
+                </button>
+                <button class="filter-chip" data-filter="gf" onclick="setFilter('gf', this)">
+                    <i class="fas fa-bread-slice"></i> Gluten-Free
+                </button>
+                <button class="filter-chip" data-filter="bestseller" onclick="setFilter('bestseller', this)">
+                    <i class="fas fa-crown"></i> Bestseller
+                </button>
+            </div>
+            <div class="sort-wrapper">
+                <label style="font-size:0.85rem;color:var(--gray-600);margin-right:8px;">Sort:</label>
+                <select id="sortSelect" onchange="applyFilters()" style="padding:8px 12px;border:2px solid var(--gray-200);border-radius:8px;font-size:0.85rem;font-family:var(--font-body);">
+                    <option value="name">Name A-Z</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs-wrapper">
+            <button class="btn btn-sm btn-primary" onclick="filterCategory('all')">All</button>
+            {% for cat, items in menu_by_category.items() %}
+            <button class="btn btn-sm category-tab" data-category="{{ cat.id }}" onclick="filterCategory({{ cat.id }})">{{ cat.name }}</button>
+            {% endfor %}
+        </div>
+
+        <!-- Search Results Container (hidden by default) -->
+        <div id="searchResults" style="display:none;"></div>
+
+        <!-- Category Sections (original view) -->
+        <div id="categoryView">
+            {% for cat, items in menu_by_category.items() %}
+            <div class="category-section mb-30 animate-on-scroll" data-category-id="{{ cat.id }}">
+                <div class="category-header">
+                    <i class="fas fa-utensil-spoon"></i>
+                    <h2>{{ cat.name }}</h2>
+                    <i class="fas fa-utensil-spoon"></i>
+                </div>
+                {% if cat.description %}
+                <p class="text-center" style="color:var(--gray-600);margin-bottom:25px;">{{ cat.description }}</p>
+                {% endif %}
+                <div class="menu-grid animate-stagger">
+                    {% for item in items %}
+                    <div class="menu-card" data-item-id="{{ item.id }}">
+                        <div class="menu-card-img lazy-bg" data-bg="{{ item.image_url or 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop' }}">
+                            <span class="menu-card-price">Rs. {{ "%.0f"|format(item.price) }}</span>
+                            <div class="menu-card-badges">
+                                {% if item.is_vegetarian %}<span class="badge badge-veg" title="Vegetarian"><i class="fas fa-leaf"></i></span>{% endif %}
+                                {% if item.is_spicy %}<span class="badge badge-spicy" title="Spicy"><i class="fas fa-fire"></i></span>{% endif %}
+                                {% if item.is_gluten_free %}<span class="badge badge-gf" title="Gluten-Free"><i class="fas fa-bread-slice"></i></span>{% endif %}
+                                {% if item.is_bestseller %}<span class="badge badge-bestseller" title="Bestseller"><i class="fas fa-crown"></i></span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="menu-card-body">
+                            <h3>{{ item.name }}</h3>
+                            <p>{{ item.description }}</p>
+                            <div class="menu-card-meta">
+                                {% if item.calories %}<span><i class="fas fa-fire-alt"></i> {{ item.calories }} cal</span>{% endif %}
+                                {% if item.preparation_time %}<span><i class="fas fa-clock"></i> {{ item.preparation_time }} min</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="menu-card-footer">
+                            <span style="font-weight:700;color:var(--maroon);">Rs. {{ "%.0f"|format(item.price) }}</span>
+                            <div class="menu-card-actions">
+                                {% if true %}
+                                <button class="customize-btn" onclick="openCustomizeModal({{ item.id }}, '{{ item.name|e }}', {{ item.price }})">
+                                    <i class="fas fa-sliders-h"></i>
+                                </button>
+                                {% endif %}
+                                <button class="add-to-cart-btn" onclick="addToCart({{ item.id }})">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ─── Customization Modal ─── -->
+<div class="modal-overlay" id="customizeModal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalItemName">Customize Your Order</h3>
+            <button class="modal-close" onclick="closeCustomizeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="modifierGroups"></div>
+            <div class="form-group" style="margin-top:15px;">
+                <label><i class="fas fa-comment" style="color:var(--gold);"></i> Special Instructions</label>
+                <textarea id="specialInstructions" placeholder="Any special requests? (e.g., no onions, extra crispy)" rows="2"></textarea>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-quantity">
+                    <button onclick="changeModalQty(-1)"><i class="fas fa-minus"></i></button>
+                    <span id="modalQty">1</span>
+                    <button onclick="changeModalQty(1)"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="modal-price">
+                    <span>Total:</span>
+                    <strong id="modalTotal">Rs. 0</strong>
+                </div>
+                <button class="btn btn-primary" onclick="addCustomizedToCart()">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── Current Filters ───
+let currentFilters = { q: '', veg: null, spicy: null, gf: null, bestseller: null };
+let currentCategory = 'all';
+let modalItemId = null;
+let modalBasePrice = 0;
+let modalQty = 1;
+let modalModifiers = [];
+let modalModifierPrice = 0;
+
+// ─── Search ───
+const searchInput = document.getElementById('menuSearch');
+const searchClear = document.getElementById('searchClear');
+let searchTimeout;
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchClear.style.display = this.value ? 'block' : 'none';
+    searchTimeout = setTimeout(() => {
+        currentFilters.q = this.value;
+        applyFilters();
+    }, 300);
+});
+
+function clearSearch() {
+    searchInput.value = '';
+    searchClear.style.display = 'none';
+    currentFilters.q = '';
+    applyFilters();
+}
+
+// ─── Dietary Filters ───
+function setFilter(filter, btn) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    
+    currentFilters.veg = null;
+    currentFilters.spicy = null;
+    currentFilters.gf = null;
+    currentFilters.bestseller = null;
+    
+    if (filter === 'veg') currentFilters.veg = 1;
+    else if (filter === 'spicy') currentFilters.spicy = 1;
+    else if (filter === 'gf') currentFilters.gf = 1;
+    else if (filter === 'bestseller') currentFilters.bestseller = 1;
+    
+    applyFilters();
+}
+
+function applyFilters() {
+    const sort = document.getElementById('sortSelect').value;
+    const hasFilters = currentFilters.q || currentFilters.veg || currentFilters.spicy || currentFilters.gf || currentFilters.bestseller;
+    
+    if (hasFilters) {
+        let url = '/api/menu/search?sort=' + sort;
+        if (currentFilters.q) url += '&q=' + encodeURIComponent(currentFilters.q);
+        if (currentFilters.veg) url += '&veg=1';
+        if (currentFilters.spicy) url += '&spicy=1';
+        if (currentFilters.gf) url += '&gluten_free=1';
+        if (currentFilters.bestseller) url += '&bestseller=1';
+        
+        fetch(url)
+            .then(r => r.json())
+            .then(items => {
+                document.getElementById('categoryView').style.display = 'none';
+                document.getElementById('searchResults').style.display = 'block';
+                renderSearchResults(items);
+            });
+    } else {
+        document.getElementById('categoryView').style.display = 'block';
+        document.getElementById('searchResults').style.display = 'none';
+        if (currentCategory !== 'all') filterCategory(currentCategory);
+    }
+}
+
+function renderSearchResults(items) {
+    const container = document.getElementById('searchResults');
+    if (items.length === 0) {
+        container.innerHTML = '<div class="text-center" style="padding:60px 20px;"><i class="fas fa-search" style="font-size:3rem;color:var(--gray-300);margin-bottom:15px;"></i><h3 style="color:var(--gray-500);">No dishes found</h3><p style="color:var(--gray-400);">Try different keywords or filters</p></div>';
+        return;
+    }
+    let html = '<div class="menu-grid">';
+    items.forEach(item => {
+        let badges = '';
+        if (item.is_vegetarian) badges += '<span class="badge badge-veg"><i class="fas fa-leaf"></i></span>';
+        if (item.is_spicy) badges += '<span class="badge badge-spicy"><i class="fas fa-fire"></i></span>';
+        if (item.is_gluten_free) badges += '<span class="badge badge-gf"><i class="fas fa-bread-slice"></i></span>';
+        if (item.is_bestseller) badges += '<span class="badge badge-bestseller"><i class="fas fa-crown"></i></span>';
+        
+        html += `
+        <div class="menu-card animate-on-scroll">
+            <div class="menu-card-img lazy-bg" data-bg="${item.image_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop'}">
+                <span class="menu-card-price">Rs. ${Math.round(item.price)}</span>
+                <div class="menu-card-badges">${badges}</div>
+            </div>
+            <div class="menu-card-body">
+                <p style="font-size:0.75rem;color:var(--gold);font-weight:600;margin-bottom:4px;">${item.category_name}</p>
+                <h3>${item.name}</h3>
+                <p>${item.description || ''}</p>
+                <div class="menu-card-meta">
+                    ${item.calories ? '<span><i class="fas fa-fire-alt"></i> '+item.calories+' cal</span>' : ''}
+                    ${item.preparation_time ? '<span><i class="fas fa-clock"></i> '+item.preparation_time+' min</span>' : ''}
+                </div>
+            </div>
+            <div class="menu-card-footer">
+                <span style="font-weight:700;color:var(--maroon);">Rs. ${Math.round(item.price)}</span>
+                <div class="menu-card-actions">
+                    <button class="customize-btn" onclick="openCustomizeModal(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})">
+                        <i class="fas fa-sliders-h"></i>
+                    </button>
+                    <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+    // Re-init scroll animations for dynamically added content
+    if (typeof initScrollAnimations === 'function') {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+        container.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+    }
+    // Re-init lazy backgrounds
+    if (typeof initLazyBackgrounds === 'function') {
+        initLazyBackgrounds();
+    }
+}
+
+// ─── Category Filter ───
+function filterCategory(categoryId) {
+    currentCategory = categoryId;
+    document.querySelectorAll('.category-section').forEach(el => {
+        if (categoryId === 'all' || el.dataset.categoryId == categoryId) {
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+    document.querySelectorAll('.category-tab').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline');
+    });
+    if (categoryId !== 'all') {
+        const activeTab = document.querySelector(`.category-tab[data-category="${categoryId}"]`);
+        if (activeTab) {
+            activeTab.classList.remove('btn-outline');
+            activeTab.classList.add('btn-primary');
+        }
+    }
+}
+
+// ─── Customization Modal ───
+function openCustomizeModal(itemId, itemName, basePrice) {
+    modalItemId = itemId;
+    modalBasePrice = basePrice;
+    modalQty = 1;
+    modalModifiers = [];
+    modalModifierPrice = 0;
+    
+    document.getElementById('modalItemName').textContent = 'Customize: ' + itemName;
+    document.getElementById('modalQty').textContent = '1';
+    document.getElementById('specialInstructions').value = '';
+    
+    // Fetch modifiers
+    fetch(`/api/menu-item/${itemId}/modifiers`)
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById('modifierGroups');
+            if (Object.keys(data.modifier_groups).length === 0) {
+                container.innerHTML = '<p style="color:var(--gray-500);text-align:center;padding:20px;">No customization options available for this item.</p>';
+            } else {
+                let html = '';
+                for (const [group, mods] of Object.entries(data.modifier_groups)) {
+                    html += `<div class="modifier-group"><h4 class="modifier-group-title">${group}</h4><div class="modifier-options">`;
+                    mods.forEach(m => {
+                        const priceText = m.price_adjustment > 0 ? `+Rs. ${m.price_adjustment}` : m.price_adjustment < 0 ? `-Rs. ${Math.abs(m.price_adjustment)}` : 'Free';
+                        html += `
+                        <label class="modifier-option">
+                            <input type="checkbox" value="${m.id}" data-price="${m.price_adjustment}" onchange="updateModalPrice()">
+                            <span class="modifier-name">${m.name}</span>
+                            <span class="modifier-price">${priceText}</span>
+                        </label>`;
+                    });
+                    html += '</div></div>';
+                }
+                container.innerHTML = html;
+            }
+            updateModalPrice();
+            document.getElementById('customizeModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+}
+
+function closeCustomizeModal() {
+    document.getElementById('customizeModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function changeModalQty(delta) {
+    modalQty = Math.max(1, modalQty + delta);
+    document.getElementById('modalQty').textContent = modalQty;
+    updateModalPrice();
+}
+
+function updateModalPrice() {
+    let modPrice = 0;
+    document.querySelectorAll('#modifierGroups input[type="checkbox"]:checked').forEach(cb => {
+        modPrice += parseFloat(cb.dataset.price) || 0;
+    });
+    modalModifierPrice = modPrice;
+    const total = (modalBasePrice + modPrice) * modalQty;
+    document.getElementById('modalTotal').textContent = 'Rs. ' + Math.round(total);
+}
+
+function addCustomizedToCart() {
+    const selectedModifiers = [];
+    document.querySelectorAll('#modifierGroups input[type="checkbox"]:checked').forEach(cb => {
+        selectedModifiers.push(parseInt(cb.value));
+    });
+    const specialInstructions = document.getElementById('specialInstructions').value;
+    
+    fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            item_id: modalItemId,
+            quantity: modalQty,
+            modifiers: selectedModifiers,
+            special_instructions: specialInstructions
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const countEl = document.getElementById('cartCount');
+            if (countEl) countEl.textContent = data.cart_count;
+            closeCustomizeModal();
+            showToast('Item added to cart!', 'success');
+        }
+    });
+}
+
+// ─── Close modal on overlay click ───
+document.getElementById('customizeModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCustomizeModal();
+});
+</script>
+{% endblock %}

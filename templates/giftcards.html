@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Gift Cards - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-gift"></i> Gift Cards</h1>
+        <p>Give the gift of delicious Pakistani cuisine to your loved ones</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="reservation-wrapper">
+            <!-- Purchase Gift Card -->
+            <div class="animate-slide-right">
+                <div class="reservation-info">
+                    <h2>Purchase a Gift Card</h2>
+                    <p>Surprise someone special with a {{ restaurant_name }} gift card! Perfect for birthdays, anniversaries, or just because.</p>
+                    
+                    <div class="reservation-details">
+                        <h3><i class="fas fa-info-circle" style="color:var(--gold);"></i> Gift Card Info</h3>
+                        <ul>
+                            <li><i class="fas fa-tag"></i> Available from Rs. 500 to Rs. 10,000</li>
+                            <li><i class="fas fa-infinity"></i> No expiration date</li>
+                            <li><i class="fas fa-utensils"></i> Valid for dine-in, delivery, and pickup</li>
+                            <li><i class="fas fa-check-circle"></i> Instant delivery via email</li>
+                            <li><i class="fas fa-shield-alt"></i> Secure and trackable</li>
+                        </ul>
+                    </div>
+
+                    <!-- Check Balance -->
+                    <div style="margin-top:25px;background:var(--cream);padding:25px;border-radius:var(--radius-md);border-left:4px solid var(--gold);">
+                        <h4 style="font-family:var(--font-heading);margin-bottom:10px;"><i class="fas fa-search-dollar" style="color:var(--gold);"></i> Check Balance</h4>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="checkBalanceCode" placeholder="Enter gift card code" style="flex:1;padding:10px 15px;border:2px solid var(--gray-200);border-radius:8px;">
+                            <button onclick="checkBalance()" class="btn btn-sm btn-gold">Check</button>
+                        </div>
+                        <div id="balanceResult" style="margin-top:10px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase Form -->
+            <div>
+                <form id="giftCardForm" style="background:var(--white);padding:35px;border-radius:var(--radius-md);box-shadow:var(--shadow-md);">
+                    <h3 style="font-family:var(--font-heading);margin-bottom:20px;text-align:center;"><i class="fas fa-gift" style="color:var(--gold);"></i> Buy Gift Card</h3>
+
+                    <div class="form-group">
+                        <label>Gift Card Amount *</label>
+                        <div class="gift-amount-grid">
+                            <button type="button" class="gift-amount-btn" onclick="selectAmount(500, this)">Rs. 500</button>
+                            <button type="button" class="gift-amount-btn" onclick="selectAmount(1000, this)">Rs. 1,000</button>
+                            <button type="button" class="gift-amount-btn active" onclick="selectAmount(2000, this)">Rs. 2,000</button>
+                            <button type="button" class="gift-amount-btn" onclick="selectAmount(5000, this)">Rs. 5,000</button>
+                        </div>
+                        <input type="number" id="giftAmount" name="amount" value="2000" min="500" max="10000" style="width:100%;padding:10px 15px;border:2px solid var(--gray-200);border-radius:8px;margin-top:10px;" placeholder="Or enter custom amount">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Your Name *</label>
+                            <input type="text" id="buyerName" name="buyer_name" required placeholder="Your name">
+                        </div>
+                        <div class="form-group">
+                            <label>Your Email *</label>
+                            <input type="email" id="buyerEmail" name="buyer_email" required placeholder="your@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Recipient Name *</label>
+                            <input type="text" id="recipientName" name="recipient_name" required placeholder="Recipient's name">
+                        </div>
+                        <div class="form-group">
+                            <label>Recipient Email</label>
+                            <input type="email" id="recipientEmail" name="recipient_email" placeholder="recipient@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Personal Message</label>
+                        <textarea id="giftMessage" name="message" placeholder="Write a personal message..." rows="3"></textarea>
+                    </div>
+
+                    <button type="button" onclick="purchaseGiftCard()" class="btn btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-gift"></i> Purchase Gift Card
+                    </button>
+
+                    <div id="giftCardResult" style="margin-top:15px;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function selectAmount(amount, btn) {
+    document.querySelectorAll('.gift-amount-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('giftAmount').value = amount;
+}
+
+function purchaseGiftCard() {
+    const data = {
+        amount: parseInt(document.getElementById('giftAmount').value),
+        buyer_name: document.getElementById('buyerName').value,
+        buyer_email: document.getElementById('buyerEmail').value,
+        recipient_name: document.getElementById('recipientName').value,
+        recipient_email: document.getElementById('recipientEmail').value,
+        message: document.getElementById('giftMessage').value
+    };
+
+    if (!data.buyer_name || !data.buyer_email || !data.recipient_name) {
+        showToast('Please fill all required fields', 'error');
+        return;
+    }
+
+    fetch('/api/gift-card/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            document.getElementById('giftCardResult').innerHTML = `
+                <div style="padding:20px;background:#E8F5E9;border-radius:12px;text-align:center;">
+                    <i class="fas fa-check-circle" style="font-size:2rem;color:#2E7D32;"></i>
+                    <h3 style="color:#2E7D32;margin:10px 0;">Gift Card Purchased!</h3>
+                    <p style="font-size:1.1rem;font-weight:700;color:var(--brown);">Code: <span style="background:var(--gold);padding:4px 12px;border-radius:6px;">${result.code}</span></p>
+                    <p style="font-size:0.85rem;color:var(--gray-600);margin-top:8px;">Share this code with ${data.recipient_name}</p>
+                </div>`;
+            showToast('Gift card purchased successfully!', 'success');
+        } else {
+            showToast(result.error || 'Error purchasing gift card', 'error');
+        }
+    });
+}
+
+function checkBalance() {
+    const code = document.getElementById('checkBalanceCode').value.trim();
+    if (!code) { showToast('Please enter a code', 'error'); return; }
+
+    fetch('/api/gift-card/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('balanceResult').innerHTML = `
+                <div style="padding:12px;background:#E8F5E9;border-radius:8px;">
+                    <p><strong>Remaining Balance:</strong> Rs. ${data.remaining}</p>
+                    <p style="font-size:0.85rem;color:var(--gray-600);">Original: Rs. ${data.initial} | For: ${data.recipient}</p>
+                </div>`;
+        } else {
+            document.getElementById('balanceResult').innerHTML = `<p style="color:#C62828;">${data.error}</p>`;
+        }
+    });
+}
+</script>
+
+<style>
+.gift-amount-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.gift-amount-btn {
+    padding: 12px; border: 2px solid var(--gray-200); border-radius: 10px;
+    background: var(--white); cursor: pointer; font-weight: 600; font-size: 0.9rem;
+    transition: var(--transition); font-family: var(--font-body);
+}
+.gift-amount-btn:hover { border-color: var(--gold); }
+.gift-amount-btn.active { border-color: var(--gold); background: var(--gold); color: var(--brown); }
+</style>
+{% endblock %}

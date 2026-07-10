@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Track Order - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-shipping-fast"></i> Track Your Order</h1>
+        <p>Enter your order number to see real-time status</p>
+    </div>
+</section>
+
+<section class="section" style="min-height:60vh;">
+    <div class="container">
+        <div class="tracking-form" style="margin-bottom:30px;">
+            <input type="text" id="orderNumberInput" placeholder="Enter order number (e.g., ORD-20260710-A1B2C3)">
+            <button class="btn btn-primary" onclick="trackOrder(document.getElementById('orderNumberInput').value)">
+                <i class="fas fa-search"></i> Track
+            </button>
+        </div>
+        <div id="trackingResult"></div>
+
+        {% if order %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('/api/order/{{ order.order_number }}')
+                    .then(r => r.json())
+                    .then(data => displayOrderStatus(data));
+            });
+        </script>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

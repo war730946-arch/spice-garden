@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}Manage Menu - {{ restaurant_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    body { background: #F0F0F0; }
+    .top-bar, .navbar, .footer { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <i class="fas fa-utensils"></i>
+            <span>{{ restaurant_name }}</span>
+        </div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}" class="active"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_admins') }}"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>View Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1><i class="fas fa-utensils" style="color:var(--gold);"></i> Menu Management</h1>
+        </div>
+
+        <!-- Add Category -->
+        <div class="admin-card">
+            <h2><i class="fas fa-plus-circle" style="color:var(--gold);"></i> Add Category</h2>
+            <form method="POST" action="{{ url_for('admin_add_category') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Category Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., Appetizers">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="Short description">
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Category</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add Menu Item -->
+        <div class="admin-card">
+            <h2><i class="fas fa-plus-circle" style="color:var(--gold);"></i> Add Menu Item</h2>
+            <form method="POST" action="{{ url_for('admin_add_item') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" name="name" required placeholder="e.g., Chicken Biryani">
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select name="category_id" required>
+                        <option value="">Select category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price (Rs.) *</label>
+                    <input type="number" name="price" required min="1" step="1" placeholder="350">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="Brief description">
+                </div>
+                <div class="form-group">
+                    <label>Image</label>
+                    <div class="image-upload-wrapper" style="display:flex;gap:10px;align-items:center;">
+                        <input type="url" name="image_url" id="menuImageUrl" placeholder="Upload or paste URL" style="flex:1;">
+                        <button type="button" class="btn btn-sm btn-gold" onclick="document.getElementById('menuFileInput').click()" style="white-space:nowrap;">
+                            <i class="fas fa-upload"></i> Upload
+                        </button>
+                        <input type="file" id="menuFileInput" accept="image/png,image/jpg,image/jpeg,image/gif,image/webp" style="display:none;">
+                    </div>
+                    <div id="menuUploadProgress" style="display:none;margin-top:8px;">
+                        <div style="height:4px;background:var(--gray-200);border-radius:2px;overflow:hidden;">
+                            <div id="menuUploadBar" style="height:100%;width:0%;background:var(--gold);border-radius:2px;transition:width 0.3s;"></div>
+                        </div>
+                        <p id="menuUploadStatus" style="font-size:0.8rem;color:var(--gray-500);margin-top:4px;">Uploading...</p>
+                    </div>
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;gap:20px;padding-top:25px;">
+                    <label style="display:flex;align-items:center;gap:6px;margin:0;">
+                        <input type="checkbox" name="is_featured"> Featured
+                    </label>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Item</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Menu Items by Category -->
+        {% for cat, items in menu_by_category.items() %}
+        <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="margin:0;"><i class="fas fa-folder" style="color:var(--gold);"></i> {{ cat.name }} <span class="admin-badge" style="background:var(--gold-light);color:var(--brown);">{{ items|length }} items</span></h2>
+                <form method="POST" action="{{ url_for('admin_delete_category', id=cat.id) }}" onsubmit="return confirm('Delete this category and all its items?')">
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+                </form>
+            </div>
+
+            {% if items %}
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Featured</th>
+                        <th>Available</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background-size:cover;background-position:center;background-image:url('{{ item.image_url or '' }}');"></div>
+                        </td>
+                        <td>
+                            <strong>{{ item.name }}</strong>
+                            {% if item.description %}<br><small style="color:var(--gray-500);">{{ item.description[:50] }}{% if item.description|length > 50 %}...{% endif %}</small>{% endif %}
+                        </td>
+                        <td><strong style="color:var(--maroon);">Rs. {{ "%.0f"|format(item.price) }}</strong></td>
+                        <td>{% if item.is_featured %}<i class="fas fa-star" style="color:var(--gold);"></i>{% else %}<i class="far fa-star" style="color:var(--gray-400);"></i>{% endif %}</td>
+                        <td>{% if item.is_available %}<span style="color:#2E7D32;font-weight:600;">Yes</span>{% else %}<span style="color:#C62828;font-weight:600;">No</span>{% endif %}</td>
+                        <td>
+                            <div class="admin-table-actions">
+                                <form method="POST" action="{{ url_for('admin_edit_item', id=item.id) }}">
+                                    <input type="hidden" name="name" value="{{ item.name }}">
+                                    <input type="hidden" name="description" value="{{ item.description }}">
+                                    <input type="hidden" name="price" value="{{ item.price }}">
+                                    <input type="hidden" name="category_id" value="{{ item.category_id }}">
+                                    <input type="hidden" name="image_url" value="{{ item.image_url }}">
+                                    <input type="hidden" name="is_available" value="{{ 'on' if item.is_available else '' }}">
+                                    <input type="hidden" name="is_featured" value="{{ 'on' if item.is_featured else '' }}">
+                                    <button type="submit" class="btn btn-sm" style="background:{{ '#E8F5E9' if item.is_available else '#FFEBEE' }};color:{{ '#2E7D32' if item.is_available else '#C62828' }};">
+                                        <i class="fas fa-{{ 'check-circle' if item.is_available else 'times-circle' }}"></i>
+                                        {{ 'Available' if item.is_available else 'Unavailable' }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_edit_item', id=item.id) }}">
+                                    <input type="hidden" name="name" value="{{ item.name }}">
+                                    <input type="hidden" name="description" value="{{ item.description }}">
+                                    <input type="hidden" name="price" value="{{ item.price }}">
+                                    <input type="hidden" name="category_id" value="{{ item.category_id }}">
+                                    <input type="hidden" name="image_url" value="{{ item.image_url }}">
+                                    <input type="hidden" name="is_available" value="{{ 'on' if item.is_available else '' }}">
+                                    <input type="hidden" name="is_featured" value="{{ 'on' if not item.is_featured else '' }}">
+                                    <button type="submit" class="btn btn-sm" style="background:{{ '#FFF8E1' if item.is_featured else '#F5F5F5' }};color:{{ '#F57F17' if item.is_featured else '#9E9E9E' }};">
+                                        <i class="fas fa-{{ 'star' if item.is_featured else 'star' }}"></i>
+                                        {{ 'Featured' if item.is_featured else 'Feature' }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_delete_item', id=item.id) }}" onsubmit="return confirm('Delete this item?')">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align:center;color:var(--gray-500);padding:20px;">No items in this category yet.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('menuFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const progress = document.getElementById('menuUploadProgress');
+    const bar = document.getElementById('menuUploadBar');
+    const status = document.getElementById('menuUploadStatus');
+    progress.style.display = 'block';
+    
+    let width = 0;
+    const interval = setInterval(() => {
+        if (width < 90) {
+            width += Math.random() * 15;
+            bar.style.width = width + '%';
+        }
+    }, 300);
+    
+    fetch('{{ url_for("api_upload_image") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        clearInterval(interval);
+        if (data.success) {
+            bar.style.width = '100%';
+            status.textContent = 'Uploaded!';
+            status.style.color = '#2E7D32';
+            document.getElementById('menuImageUrl').value = data.url;
+            setTimeout(() => {
+                progress.style.display = 'none';
+                bar.style.width = '0%';
+            }, 1500);
+        } else {
+            bar.style.width = '0%';
+            status.textContent = data.error || 'Upload failed';
+            status.style.color = '#C62828';
+        }
+    })
+    .catch(err => {
+        clearInterval(interval);
+        bar.style.width = '0%';
+        status.textContent = 'Upload error: ' + err.message;
+        status.style.color = '#C62828';
+    });
+});
+</script>
+{% endblock %}

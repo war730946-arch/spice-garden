@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Manage Reviews - {{ restaurant_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    body { background: #F0F0F0; }
+    .top-bar, .navbar, .footer { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <i class="fas fa-utensils"></i>
+            <span>{{ restaurant_name }}</span>
+        </div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}" class="active"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_admins') }}"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>View Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1><i class="fas fa-star" style="color:var(--gold);"></i> Reviews</h1>
+        </div>
+
+        {% if reviews %}
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr style="{{ 'background:#FFF8E1;' if not review.is_approved else '' }}">
+                        <td><strong>{{ review.customer_name }}</strong></td>
+                        <td>
+                            {% for i in range(review.rating) %}<i class="fas fa-star" style="color:var(--gold);font-size:0.85rem;"></i>{% endfor %}
+                            {% for i in range(5 - review.rating) %}<i class="far fa-star" style="color:var(--gray-300);font-size:0.85rem;"></i>{% endfor %}
+                        </td>
+                        <td><small>{{ review.comment[:80] }}{% if review.comment|length > 80 %}...{% endif %}</small></td>
+                        <td>
+                            {% if review.is_approved %}
+                            <span class="status-badge status-ready">Approved</span>
+                            {% else %}
+                            <span class="status-badge status-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ review.created_at.strftime('%b %d, %Y') }}</small></td>
+                        <td>
+                            <div class="admin-table-actions">
+                                <form method="POST" action="{{ url_for('admin_approve_review', id=review.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm {{ 'btn-success' if not review.is_approved else 'btn-outline' }}">
+                                        <i class="fas fa-{{ 'check' if not review.is_approved else 'eye-slash' }}"></i>
+                                        {{ 'Approve' if not review.is_approved else 'Hide' }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_delete_review', id=review.id) }}" style="display:inline;" onsubmit="return confirm('Delete this review?')">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="admin-card" style="text-align:center;padding:60px;">
+            <i class="fas fa-star" style="font-size:3rem;color:var(--gray-300);margin-bottom:15px;"></i>
+            <h3 style="color:var(--gray-500);">No reviews yet</h3>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

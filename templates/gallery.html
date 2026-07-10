@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Gallery - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-camera"></i> Photo Gallery</h1>
+        <p>A glimpse into our restaurant, cuisine, and memorable moments</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if images %}
+        <div class="gallery-grid animate-stagger">
+            {% for img in images %}
+            <div class="gallery-item animate-on-scroll" onclick="openLightbox('{{ img.image_url }}', '{{ img.title|e }}', '{{ img.description|e }}')">
+                <div class="gallery-img lazy-bg" data-bg="{{ img.image_url }}"></div>
+                <div class="gallery-overlay">
+                    <h4>{{ img.title }}</h4>
+                    {% if img.description %}<p>{{ img.description }}</p>{% endif %}
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center" style="padding:60px;">
+            <i class="fas fa-camera" style="font-size:3rem;color:var(--gray-300);margin-bottom:15px;"></i>
+            <h3 style="color:var(--gray-500);">Gallery coming soon!</h3>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox" style="display:none;" onclick="closeLightbox()">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <img id="lightboxImg" src="" alt="">
+        <div class="lightbox-caption">
+            <h3 id="lightboxTitle"></h3>
+            <p id="lightboxDesc"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+function openLightbox(url, title, desc) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightboxTitle').textContent = title;
+    document.getElementById('lightboxDesc').textContent = desc;
+    document.getElementById('lightbox').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+    document.body.style.overflow = '';
+}
+</script>
+
+<style>
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.gallery-item {
+    position: relative; border-radius: var(--radius-md); overflow: hidden;
+    cursor: pointer; aspect-ratio: 4/3;
+}
+.gallery-img {
+    width: 100%; height: 100%; background-size: cover; background-position: center;
+    transition: transform 0.5s ease;
+}
+.gallery-item:hover .gallery-img { transform: scale(1.1); }
+.gallery-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 30px 20px 20px; color: white;
+    transform: translateY(100%); transition: transform 0.3s ease;
+}
+.gallery-item:hover .gallery-overlay { transform: translateY(0); }
+.gallery-overlay h4 { font-family: var(--font-heading); margin-bottom: 4px; }
+.gallery-overlay p { font-size: 0.85rem; opacity: 0.8; }
+.gallery-overlay i { position: absolute; top: 15px; right: 15px; font-size: 1.2rem; opacity: 0; transition: opacity 0.3s; }
+.gallery-item:hover .gallery-overlay i { opacity: 1; }
+
+.lightbox-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9); z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+}
+.lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; }
+.lightbox-content img { max-width: 100%; max-height: 80vh; border-radius: var(--radius-md); }
+.lightbox-close {
+    position: absolute; top: -40px; right: 0; background: none; border: none;
+    color: white; font-size: 2rem; cursor: pointer;
+}
+.lightbox-caption { text-align: center; color: white; padding: 15px 0; }
+.lightbox-caption h3 { font-family: var(--font-heading); }
+.lightbox-caption p { opacity: 0.7; font-size: 0.9rem; }
+</style>
+{% endblock %}

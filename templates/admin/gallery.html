@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Gallery - {{ restaurant_name }}{% endblock %}
+{% block extra_head %}
+<style>body { background: #F0F0F0; } .top-bar, .navbar, .footer { display: none; }</style>
+{% endblock %}
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header"><i class="fas fa-utensils"></i><span>{{ restaurant_name }}</span></div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_promo_codes') }}"><i class="fas fa-tag"></i> <span>Promo Codes</span></a>
+            <a href="{{ url_for('admin_gift_cards') }}"><i class="fas fa-gift"></i> <span>Gift Cards</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_faq') }}"><i class="fas fa-question-circle"></i> <span>FAQ</span></a>
+            <a href="{{ url_for('admin_gallery') }}" class="active"><i class="fas fa-camera"></i> <span>Gallery</span></a>
+            <a href="{{ url_for('admin_newsletter') }}"><i class="fas fa-newspaper"></i> <span>Newsletter</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="admin-main">
+        <div class="admin-header"><h1><i class="fas fa-camera" style="color:var(--gold);"></i> Photo Gallery</h1></div>
+        <div class="admin-card">
+            <h2><i class="fas fa-plus-circle" style="color:var(--gold);"></i> Add Image</h2>
+            
+            <!-- Upload from computer -->
+            <div style="margin-bottom:20px;padding:20px;border:2px dashed var(--gold-light);border-radius:var(--radius-md);text-align:center;background:var(--cream);" id="uploadDropzone">
+                <i class="fas fa-cloud-upload-alt" style="font-size:2.5rem;color:var(--gold);margin-bottom:10px;"></i>
+                <p style="font-weight:600;margin-bottom:8px;">Upload from your computer</p>
+                <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:15px;">PNG, JPG, JPEG, GIF, or WEBP (max 16MB)</p>
+                <input type="file" id="imageUploadInput" accept="image/png,image/jpg,image/jpeg,image/gif,image/webp" style="display:none;">
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('imageUploadInput').click()">
+                        <i class="fas fa-folder-open"></i> Choose File
+                    </button>
+                    <button type="button" class="btn btn-gold" id="uploadBtn" style="display:none;" onclick="uploadImage()">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </div>
+                <div id="uploadProgress" style="display:none;margin-top:15px;">
+                    <div style="height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden;">
+                        <div id="uploadProgressBar" style="height:100%;width:0%;background:var(--gold);border-radius:3px;transition:width 0.3s;"></div>
+                    </div>
+                    <p id="uploadStatus" style="font-size:0.85rem;color:var(--gray-500);margin-top:8px;">Uploading...</p>
+                </div>
+                <div id="uploadPreview" style="display:none;margin-top:15px;">
+                    <img id="previewImage" src="" alt="Preview" style="max-width:200px;max-height:150px;border-radius:8px;box-shadow:var(--shadow-sm);">
+                    <p id="previewUrl" style="font-size:0.8rem;color:var(--gray-500);margin-top:6px;word-break:break-all;"></p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin_add_gallery_image') }}" class="admin-form" id="addImageForm">
+                <div class="form-group"><label>Image URL *</label><input type="url" name="image_url" id="imageUrlInput" required placeholder="Upload from above or paste URL"></div>
+                <div class="form-group"><label>Title</label><input type="text" name="title" placeholder="Image title"></div>
+                <div class="form-group"><label>Description</label><input type="text" name="description" placeholder="Brief description"></div>
+                <div class="form-group" style="display:flex;align-items:flex-end;"><button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Image</button></div>
+            </form>
+        </div>
+        <div class="admin-card">
+            <h2>Gallery Images</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:20px;">
+                {% for img in images %}
+                <div style="position:relative;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="height:180px;background-image:url('{{ img.image_url }}');background-size:cover;background-position:center;"></div>
+                    <div style="padding:12px;">
+                        <p style="font-weight:600;font-size:0.9rem;">{{ img.title }}</p>
+                        <p style="font-size:0.8rem;color:var(--gray-500);">{{ img.description[:50] }}</p>
+                        <form method="POST" action="{{ url_for('admin_delete_gallery_image', id=img.id) }}" onsubmit="return confirm('Delete?')" style="margin-top:8px;">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let selectedFile = null;
+
+document.getElementById('imageUploadInput').addEventListener('change', function(e) {
+    selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const preview = document.getElementById('uploadPreview');
+        const previewImg = document.getElementById('previewImage');
+        previewImg.src = ev.target.result;
+        preview.style.display = 'block';
+        document.getElementById('uploadBtn').style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(selectedFile);
+});
+
+function uploadImage() {
+    if (!selectedFile) return;
+    
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    
+    const progress = document.getElementById('uploadProgress');
+    const bar = document.getElementById('uploadProgressBar');
+    const status = document.getElementById('uploadStatus');
+    progress.style.display = 'block';
+    
+    let width = 0;
+    const interval = setInterval(() => {
+        if (width < 90) {
+            width += Math.random() * 15;
+            bar.style.width = width + '%';
+        }
+    }, 300);
+    
+    fetch('{{ url_for("api_upload_image") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        clearInterval(interval);
+        if (data.success) {
+            bar.style.width = '100%';
+            status.textContent = 'Uploaded!';
+            status.style.color = '#2E7D32';
+            document.getElementById('imageUrlInput').value = data.url;
+            document.getElementById('previewUrl').textContent = 'URL: ' + data.url;
+            setTimeout(() => {
+                progress.style.display = 'none';
+                bar.style.width = '0%';
+            }, 1500);
+        } else {
+            bar.style.width = '0%';
+            status.textContent = data.error || 'Upload failed';
+            status.style.color = '#C62828';
+        }
+    })
+    .catch(err => {
+        clearInterval(interval);
+        bar.style.width = '0%';
+        status.textContent = 'Upload error: ' + err.message;
+        status.style.color = '#C62828';
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}{{ restaurant_name }} - {{ restaurant_tagline }}{% endblock %}
+
+{% block content %}
+<!-- ─── Hero Section ─── -->
+<section class="hero">
+    <div class="hero-content animate-fade-in visible">
+        <div class="hero-badge"><i class="fas fa-star"></i> Lahore's Finest Dining</div>
+        <h1>Welcome to <span>{{ restaurant_name }}</span></h1>
+        <p>Experience the rich, authentic flavors of Pakistan. From sizzling kebabs to aromatic biryanis, every dish tells a story of tradition and passion.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('menu_page') }}" class="btn btn-primary"><i class="fas fa-utensils"></i> View Our Menu</a>
+            <a href="{{ url_for('reservations') }}" class="btn btn-secondary"><i class="fas fa-calendar-alt"></i> Reserve a Table</a>
+        </div>
+    </div>
+</section>
+
+<!-- ─── Features ─── -->
+<section class="features animate-on-scroll">
+    <div class="container">
+        <div class="features-grid animate-stagger">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-leaf"></i></div>
+                <h3>Fresh Ingredients</h3>
+                <p>We source the freshest ingredients daily for authentic flavors</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-truck"></i></div>
+                <h3>Free Delivery</h3>
+                <p>Free delivery on orders above Rs. 1,000 within Lahore</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-award"></i></div>
+                <h3>Award Winning</h3>
+                <p>Recognized for excellence in Pakistani cuisine since 2015</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-clock"></i></div>
+                <h3>Fast Service</h3>
+                <p>Quick preparation and delivery within 30-40 minutes</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── Featured Menu ─── -->
+<section class="section menu-preview">
+    <div class="container">
+        <div class="section-divider animate-on-scroll"></div>
+        <h2 class="section-title animate-on-scroll">Featured Dishes</h2>
+        <p class="section-subtitle animate-on-scroll">Discover our most beloved dishes, crafted with traditional recipes and the finest ingredients.</p>
+
+        {% if featured_items %}
+        <div class="menu-grid animate-stagger">
+            {% for item in featured_items %}
+            <div class="menu-card">
+                <div class="menu-card-img" style="background-image: url('{{ item.image_url or 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop' }}');">
+                    <span class="menu-card-price">Rs. {{ "%.0f"|format(item.price) }}</span>
+                </div>
+                <div class="menu-card-body">
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.description }}</p>
+                </div>
+                <div class="menu-card-footer">
+                    <span style="font-weight:700;color:var(--maroon);">Rs. {{ "%.0f"|format(item.price) }}</span>
+                    <button class="add-to-cart-btn" onclick="addToCart({{ item.id }})">
+                        <i class="fas fa-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-30">
+            <a href="{{ url_for('menu_page') }}" class="btn btn-outline">View Full Menu <i class="fas fa-arrow-right"></i></a>
+        </div>
+        {% else %}
+        <p class="text-center" style="color:var(--gray-500);">Menu items coming soon!</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ─── Review Form ─── -->
+<section class="section" style="background:var(--white);">
+    <div class="container">
+        <div class="section-divider animate-on-scroll"></div>
+        <h2 class="section-title animate-on-scroll">Share Your Experience</h2>
+        <p class="section-subtitle animate-on-scroll">We'd love to hear about your dining experience at {{ restaurant_name }}.</p>
+        <div style="max-width:500px;margin:0 auto;">
+            <form id="reviewForm" onsubmit="submitReview(event)" style="background:var(--beige);padding:30px;border-radius:var(--radius-md);">
+                <div class="form-group">
+                    <label>Your Name *</label>
+                    <input type="text" name="name" required placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>Rating *</label>
+                    <div class="star-rating">
+                        <input type="radio" name="rating" value="5" id="star5"><label for="star5"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" value="4" id="star4"><label for="star4"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" value="3" id="star3"><label for="star3"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" value="2" id="star2"><label for="star2"><i class="fas fa-star"></i></label>
+                        <input type="radio" name="rating" value="1" id="star1"><label for="star1"><i class="fas fa-star"></i></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Your Review *</label>
+                    <textarea name="comment" required placeholder="Tell us about your experience..." rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Review</button>
+            </form>
+            <div id="reviewSuccess" class="hidden text-center mt-20" style="padding:20px;background:#E8F5E9;border-radius:var(--radius-md);color:#2E7D32;">
+                <i class="fas fa-check-circle" style="font-size:2rem;"></i>
+                <p style="margin-top:10px;font-weight:600;">Thank you! Your review will appear after approval.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── Reviews Carousel ─── -->
+{% if reviews %}
+<section class="section reviews-section">
+    <div class="container">
+        <div class="section-divider animate-on-scroll"></div>
+        <h2 class="section-title animate-on-scroll">What Our Customers Say</h2>
+        <p class="section-subtitle animate-on-scroll">Don't just take our word for it - hear from our valued guests.</p>
+        <div class="reviews-carousel animate-on-scroll">
+            <div class="reviews-track">
+                {% for review in reviews %}
+                <div class="review-slide">
+                    <div class="review-card" style="margin:10px;">
+                        <div class="review-stars">
+                            {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                            {% for i in range(5 - review.rating) %}<i class="far fa-star"></i>{% endfor %}
+                        </div>
+                        <p class="review-comment">{{ review.comment }}</p>
+                        <p class="review-author">- {{ review.customer_name }}</p>
+                        <p class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="carousel-controls">
+                <button class="carousel-btn carousel-prev" aria-label="Previous reviews">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="carousel-dots"></div>
+                <button class="carousel-btn carousel-next" aria-label="Next reviews">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

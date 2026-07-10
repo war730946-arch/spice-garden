@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service - {{ restaurant_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1><i class="fas fa-file-contract"></i> Terms of Service</h1>
+        <p>Last updated: {{ current_year }}</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container" style="max-width:800px;">
+        <div class="legal-content animate-on-scroll">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing and using the {{ restaurant_name }} website, you agree to be bound by these Terms of Service.</p>
+
+            <h2>2. Online Ordering</h2>
+            <ul>
+                <li>Orders are subject to availability and confirmation</li>
+                <li>Prices are in Pakistani Rupees (PKR) and include applicable taxes</li>
+                <li>We reserve the right to refuse or cancel orders at our discretion</li>
+                <li>Payment must be completed before order processing for online payments</li>
+            </ul>
+
+            <h2>3. Delivery Policy</h2>
+            <ul>
+                <li>Delivery times are estimates and may vary based on demand and weather</li>
+                <li>Free delivery is available on orders above Rs. 1,000 within our delivery area</li>
+                <li>A delivery fee of Rs. 100 applies to orders below Rs. 1,000</li>
+                <li>We are not responsible for delays caused by incorrect address information</li>
+            </ul>
+
+            <h2>4. Cancellation & Refund</h2>
+            <ul>
+                <li>Orders can be cancelled within 15 minutes of placement</li>
+                <li>Refunds for cancelled orders will be processed within 3-5 business days</li>
+                <li>In case of quality issues, please contact us within 24 hours</li>
+            </ul>
+
+            <h2>5. Reservations</h2>
+            <ul>
+                <li>Table reservations are subject to availability</li>
+                <li>Please arrive within 15 minutes of your reservation time</li>
+                <li>We hold tables for 15 minutes past the reserved time</li>
+            </ul>
+
+            <h2>6. Gift Cards</h2>
+            <ul>
+                <li>Gift cards are non-refundable and cannot be exchanged for cash</li>
+                <li>Gift cards have no expiration date</li>
+                <li>Lost or stolen gift cards cannot be replaced</li>
+            </ul>
+
+            <h2>7. Intellectual Property</h2>
+            <p>All content on this website, including text, images, logos, and design, is the property of {{ restaurant_name }} and is protected by copyright laws.</p>
+
+            <h2>8. Limitation of Liability</h2>
+            <p>{{ restaurant_name }} shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or services.</p>
+
+            <h2>9. Changes to Terms</h2>
+            <p>We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting on this page.</p>
+
+            <h2>10. Contact</h2>
+            <p>For questions about these Terms, contact us at <a href="mailto:{{ restaurant_email }}">{{ restaurant_email }}</a>.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: spice-garden
+    runtime: python
+    region: singapore  # closest to Pakistan
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false  # user will provide Neon/Supabase DB URL
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /health
+    autoDeploy: true

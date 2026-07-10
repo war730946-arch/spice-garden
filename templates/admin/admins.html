@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Admin Accounts - {{ restaurant_name }}{% endblock %}
+{% block extra_head %}
+<style>body { background: #F0F0F0; } .top-bar, .navbar, .footer { display: none; }</style>
+{% endblock %}
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header"><i class="fas fa-utensils"></i><span>{{ restaurant_name }}</span></div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_promo_codes') }}"><i class="fas fa-tag"></i> <span>Promo Codes</span></a>
+            <a href="{{ url_for('admin_gift_cards') }}"><i class="fas fa-gift"></i> <span>Gift Cards</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_faq') }}"><i class="fas fa-question-circle"></i> <span>FAQ</span></a>
+            <a href="{{ url_for('admin_gallery') }}"><i class="fas fa-camera"></i> <span>Gallery</span></a>
+            <a href="{{ url_for('admin_newsletter') }}"><i class="fas fa-newspaper"></i> <span>Newsletter</span></a>
+            <a href="{{ url_for('admin_admins') }}" class="active"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1><i class="fas fa-users-cog" style="color:var(--gold);"></i> Admin Accounts</h1>
+            <span style="color:var(--gray-500);">Logged in as <strong>{{ session.get('admin_username', '') }}</strong></span>
+        </div>
+
+        <!-- Add New Admin -->
+        <div class="admin-card">
+            <h2><i class="fas fa-user-plus" style="color:var(--gold);"></i> Add New Admin</h2>
+            <form method="POST" action="{{ url_for('admin_add_admin') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" name="username" required placeholder="Choose a username" minlength="3" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" required placeholder="Choose a strong password" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password *</label>
+                    <input type="password" name="confirm_password" required placeholder="Repeat password">
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Admin</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Change Your Password -->
+        <div class="admin-card">
+            <h2><i class="fas fa-key" style="color:var(--gold);"></i> Change Your Password</h2>
+            <form method="POST" action="{{ url_for('admin_change_password') }}" class="admin-form">
+                <div class="form-group">
+                    <label>Current Password *</label>
+                    <input type="password" name="current_password" required placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label>New Password *</label>
+                    <input type="password" name="new_password" required placeholder="Enter new password" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password *</label>
+                    <input type="password" name="confirm_new_password" required placeholder="Repeat new password">
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button type="submit" class="btn btn-gold"><i class="fas fa-save"></i> Update Password</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- All Admins List -->
+        <div class="admin-card">
+            <h2><i class="fas fa-list" style="color:var(--gold);"></i> All Admin Accounts</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    <tr>
+                        <td>{{ admin.id }}</td>
+                        <td>
+                            <strong>{{ admin.username }}</strong>
+                            {% if admin.username == session.get('admin_username') %}
+                            <span class="admin-badge" style="background:var(--gold-light);color:var(--brown);">You</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ admin.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if admin.username == session.get('admin_username') %}
+                            <span style="color:#2E7D32;font-weight:600;"><i class="fas fa-circle" style="font-size:0.6rem;vertical-align:middle;"></i> Active Now</span>
+                            {% else %}
+                            <span style="color:var(--gray-500);"><i class="fas fa-circle" style="font-size:0.6rem;vertical-align:middle;"></i> Registered</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if admin.username != session.get('admin_username') and admins|length > 1 %}
+                            <form method="POST" action="{{ url_for('admin_delete_admin', id=admin.id) }}" onsubmit="return confirm('Delete admin \"{{ admin.username }}\" permanently?')">
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+                            </form>
+                            {% else %}
+                            <span style="color:var(--gray-400);font-size:0.85rem;">Cannot delete self</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Security Tips -->
+        <div class="admin-card" style="background:#FFF8E1;border-left:4px solid var(--gold);">
+            <h2 style="color:var(--brown);"><i class="fas fa-shield-alt" style="color:var(--gold);"></i> Security Tips</h2>
+            <ul style="list-style:disc;padding-left:20px;line-height:2;color:var(--gray-700);">
+                <li>Always use a <strong>strong password</strong> (min 8 characters, mix of letters, numbers, symbols)</li>
+                <li>Share admin accounts only with <strong>trusted staff</strong></li>
+                <li>Each staff member should have their <strong>own account</strong> - don't share one login</li>
+                <li>Change passwords <strong>regularly</strong> (every 30-60 days recommended)</li>
+                <li>Remove access for staff who <strong>leave</strong> immediately</li>
+                <li>The restaurant owner (Super Admin) should keep the <strong>master account</strong></li>
+            </ul>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - {{ restaurant_name }}{% endblock %}
+{% block extra_head %}
+<style>body { background: #F0F0F0; } .top-bar, .navbar, .footer { display: none; }</style>
+{% endblock %}
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header"><i class="fas fa-utensils"></i><span>{{ restaurant_name }}</span></div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_promo_codes') }}"><i class="fas fa-tag"></i> <span>Promo Codes</span></a>
+            <a href="{{ url_for('admin_gift_cards') }}"><i class="fas fa-gift"></i> <span>Gift Cards</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_faq') }}"><i class="fas fa-question-circle"></i> <span>FAQ</span></a>
+            <a href="{{ url_for('admin_gallery') }}"><i class="fas fa-camera"></i> <span>Gallery</span></a>
+            <a href="{{ url_for('admin_admins') }}"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('admin_newsletter') }}"><i class="fas fa-newspaper"></i> <span>Newsletter</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>View Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1><i class="fas fa-tachometer-alt" style="color:var(--gold);"></i> Dashboard</h1>
+            <span style="color:var(--gray-500);">Welcome, {{ session.get('admin_username', 'Admin') }}</span>
+        </div>
+        <div class="admin-stats">
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#E3F2FD;color:#1565C0;"><i class="fas fa-shopping-bag"></i></div><div><div class="admin-stat-number">{{ total_orders }}</div><div class="admin-stat-label">Total Orders</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#FFF3E0;color:#E65100;"><i class="fas fa-clock"></i></div><div><div class="admin-stat-number">{{ pending_orders }}</div><div class="admin-stat-label">Pending Orders</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#F3E5F5;color:#7B1FA2;"><i class="fas fa-fire"></i></div><div><div class="admin-stat-number">{{ preparing_orders }}</div><div class="admin-stat-label">Preparing</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-dollar-sign"></i></div><div><div class="admin-stat-number">Rs. {{ "%.0f"|format(total_revenue) }}</div><div class="admin-stat-label">Revenue</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#FFF8E1;color:#F57F17;"><i class="fas fa-calendar"></i></div><div><div class="admin-stat-number">{{ total_reservations }}</div><div class="admin-stat-label">Reservations</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#E1F5FE;color:#0277BD;"><i class="fas fa-envelope"></i></div><div><div class="admin-stat-number">{{ unread_messages }}</div><div class="admin-stat-label">Unread Messages</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#FCE4EC;color:#C62828;"><i class="fas fa-star"></i></div><div><div class="admin-stat-number">{{ pending_reviews }}</div><div class="admin-stat-label">Pending Reviews</div></div></div>
+            <div class="admin-stat-card"><div class="admin-stat-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-newspaper"></i></div><div><div class="admin-stat-number">{{ total_subscribers }}</div><div class="admin-stat-label">Subscribers</div></div></div>
+        </div>
+        <div class="admin-card">
+            <h2><i class="fas fa-clock" style="color:var(--gold);"></i> Recent Orders</h2>
+            {% if recent_orders %}
+            <table class="admin-table">
+                <thead><tr><th>Order #</th><th>Customer</th><th>Type</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>{{ order.customer_name }}</td>
+                        <td><span style="text-transform:capitalize;">{{ order.order_type }}</span></td>
+                        <td>Rs. {{ "%.0f"|format(order.total_amount) }}</td>
+                        <td><span class="status-badge status-{{ order.status }}">{{ order.status }}</span></td>
+                        <td>{{ order.order_date.strftime('%b %d, %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align:center;color:var(--gray-500);padding:30px;">No orders yet.</p>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

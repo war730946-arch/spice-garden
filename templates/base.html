@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ restaurant_name }} - {{ restaurant_tagline }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ restaurant_name }} - Authentic Pakistani Cuisine. Online ordering, table reservations, and catering services.{% endblock %}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- ─── Open Graph / Social Meta ─── -->
+    <meta property="og:title" content="{% block og_title %}{{ restaurant_name }} - {{ restaurant_tagline }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Experience authentic Pakistani cuisine at {{ restaurant_name }}. Online ordering, table reservations, catering, and more.{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{% block og_image %}https://images.unsplash.com/photo-1552590635-27c2c2128abf?w=1200&h=630&fit=crop{% endblock %}">
+    <meta property="og:locale" content="en_PK">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ restaurant_name }} - {{ restaurant_tagline }}">
+    <meta name="twitter:description" content="Authentic Pakistani Cuisine. Online ordering, table reservations, and catering services.">
+    
+    <!-- ─── Canonical URL ─── -->
+    <link rel="canonical" href="{{ request.url }}">
+    
+    <!-- ─── JSON-LD Structured Data ─── -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "{{ restaurant_name }}",
+        "description": "{{ restaurant_tagline }}. Experience the rich, authentic flavors of Pakistan.",
+        "image": "https://images.unsplash.com/photo-1552590635-27c2c2128abf?w=1200&h=630&fit=crop",
+        "url": "{{ request.url_root }}",
+        "telephone": "{{ restaurant_phone }}",
+        "email": "{{ restaurant_email }}",
+        "servesCuisine": "Pakistani",
+        "priceRange": "$$",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "42 Food Street, Gulberg",
+            "addressLocality": "Lahore",
+            "addressCountry": "PK"
+        },
+        "openingHoursSpecification": [
+            {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"], "opens": "11:00", "closes": "23:00"}
+        ],
+        "sameAs": [
+            "https://www.facebook.com/spicegarden",
+            "https://www.instagram.com/spicegarden"
+        ]
+    }
+    </script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- ─── Top Bar ─── -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-content">
+                <span><i class="fas fa-phone"></i> {{ restaurant_phone }}</span>
+                <span><i class="fas fa-envelope"></i> {{ restaurant_email }}</span>
+                <span><i class="fas fa-clock"></i> {{ restaurant_hours }}</span>
+                <span><i class="fab fa-whatsapp"></i> WhatsApp Order</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Navbar ─── -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>{{ restaurant_name }}</span>
+            </a>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+                <li><a href="{{ url_for('menu_page') }}" class="{% if request.endpoint == 'menu_page' %}active{% endif %}">Menu</a></li>
+                <li><a href="{{ url_for('reservations') }}" class="{% if request.endpoint == 'reservations' %}active{% endif %}">Reservations</a></li>
+                <li><a href="{{ url_for('order_tracking_page') }}">Track Order</a></li>
+                <li><a href="{{ url_for('catering') }}" class="{% if request.endpoint == 'catering' %}active{% endif %}">Catering</a></li>
+                <li><a href="{{ url_for('gallery') }}" class="{% if request.endpoint == 'gallery' %}active{% endif %}">Gallery</a></li>
+                <li><a href="{{ url_for('gift_cards_page') }}" class="{% if request.endpoint == 'gift_cards_page' %}active{% endif %}">Gift Cards</a></li>
+                <li><a href="{{ url_for('about') }}" class="{% if request.endpoint == 'about' %}active{% endif %}">About</a></li>
+                <li><a href="{{ url_for('contact') }}" class="{% if request.endpoint == 'contact' %}active{% endif %}">Contact</a></li>
+                <li><a href="{{ url_for('faq') }}" class="{% if request.endpoint == 'faq' %}active{% endif %}">FAQ</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="{{ url_for('cart_page') }}" class="cart-btn" id="cartBtn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── Flash Messages ─── -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- ─── Main Content ─── -->
+    {% block content %}{% endblock %}
+
+    <!-- ─── Back to Top ─── -->
+    <button id="backToTop" class="back-to-top" aria-label="Back to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- ─── WhatsApp Floating Button ─── -->
+    <a href="https://wa.me/{{ whatsapp_number }}?text=Hi!%20I'd%20like%20to%20place%20an%20order%20from%20{{ restaurant_name }}" 
+       class="whatsapp-float" target="_blank" aria-label="Order on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">Order on WhatsApp</span>
+    </a>
+
+    <!-- ─── Footer ─── -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-utensils"></i>
+                        <span>{{ restaurant_name }}</span>
+                    </div>
+                    <p>{{ restaurant_tagline }}. Experience the rich flavors of Pakistan in every bite.</p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://wa.me/{{ whatsapp_number }}" aria-label="WhatsApp" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('menu_page') }}">Menu</a></li>
+                        <li><a href="{{ url_for('reservations') }}">Reservations</a></li>
+                        <li><a href="{{ url_for('catering') }}">Catering & Events</a></li>
+                        <li><a href="{{ url_for('gallery') }}">Photo Gallery</a></li>
+                        <li><a href="{{ url_for('gift_cards_page') }}">Gift Cards</a></li>
+                        <li><a href="{{ url_for('about') }}">About Us</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                        <li><a href="{{ url_for('admin_login') }}" target="_blank" style="color:var(--gold);font-weight:600;"><i class="fas fa-lock"></i> Admin Panel</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact Info</h4>
+                    <ul class="contact-list">
+                        <li><i class="fas fa-map-marker-alt"></i> {{ restaurant_address }}</li>
+                        <li><i class="fas fa-phone"></i> {{ restaurant_phone }}</li>
+                        <li><i class="fas fa-envelope"></i> {{ restaurant_email }}</li>
+                        <li><i class="fas fa-clock"></i> {{ restaurant_hours }}</li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Newsletter</h4>
+                    <p style="opacity:0.8;font-size:0.9rem;margin-bottom:15px;">Subscribe for exclusive offers, new menu items, and events!</p>
+                    <div class="newsletter-form">
+                        <input type="email" id="newsletterEmail" placeholder="Enter your email" style="width:100%;padding:10px 15px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:white;border-radius:8px;font-size:0.9rem;margin-bottom:10px;">
+                        <button onclick="subscribeNewsletter()" class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:0.85rem;"><i class="fas fa-paper-plane"></i> Subscribe</button>
+                    </div>
+                    <div style="margin-top:20px;">
+                        <h4 style="margin-bottom:10px;">Opening Hours</h4>
+                        <ul class="hours-list">
+                            <li><span>Mon - Fri</span><span>11AM - 10PM</span></li>
+                            <li><span>Saturday</span><span>11AM - 11PM</span></li>
+                            <li><span>Sunday</span><span>12PM - 10PM</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; {{ current_year }} {{ restaurant_name }}. All rights reserved. | 
+                    <a href="{{ url_for('privacy_policy') }}" style="color:var(--gold);">Privacy Policy</a> | 
+                    <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms of Service</a> | 
+                    <a href="{{ url_for('faq') }}" style="color:var(--gold);">FAQ</a> | 
+                    <a href="{{ url_for('admin_login') }}" style="color:var(--gold);font-weight:600;" target="_blank"><i class="fas fa-lock"></i> Admin</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ─── Scripts ─── -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Messages - {{ restaurant_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    body { background: #F0F0F0; }
+    .top-bar, .navbar, .footer { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <i class="fas fa-utensils"></i>
+            <span>{{ restaurant_name }}</span>
+        </div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_messages') }}" class="active"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_admins') }}"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>View Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1><i class="fas fa-envelope" style="color:var(--gold);"></i> Contact Messages</h1>
+        </div>
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="admin-card" style="border-left:4px solid {{ '#2E7D32' if msg.is_read else 'var(--gold)' }};">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;">
+                <div>
+                    <h3 style="font-family:var(--font-heading);margin-bottom:5px;">
+                        {{ msg.name }}
+                        {% if not msg.is_read %}<span class="admin-badge" style="background:var(--gold);color:var(--brown);">New</span>{% endif %}
+                    </h3>
+                    <p style="color:var(--gray-500);font-size:0.85rem;">
+                        {{ msg.email }} {% if msg.phone %}| {{ msg.phone }}{% endif %}
+                        | {{ msg.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                    </p>
+                </div>
+                <div class="admin-table-actions">
+                    {% if not msg.is_read %}
+                    <form method="POST" action="{{ url_for('admin_mark_read', id=msg.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i> Mark Read</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('admin_delete_message', id=msg.id) }}" style="display:inline;" onsubmit="return confirm('Delete this message?')">
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% if msg.subject %}
+            <p style="margin-bottom:8px;"><strong>Subject:</strong> {{ msg.subject }}</p>
+            {% endif %}
+            <div style="background:var(--beige);padding:15px;border-radius:8px;">
+                <p style="line-height:1.7;">{{ msg.message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="admin-card" style="text-align:center;padding:60px;">
+            <i class="fas fa-envelope-open" style="font-size:3rem;color:var(--gray-300);margin-bottom:15px;"></i>
+            <h3 style="color:var(--gray-500);">No messages yet</h3>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

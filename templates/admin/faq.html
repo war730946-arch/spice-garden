@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Manage FAQ - {{ restaurant_name }}{% endblock %}
+{% block extra_head %}
+<style>body { background: #F0F0F0; } .top-bar, .navbar, .footer { display: none; }</style>
+{% endblock %}
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header"><i class="fas fa-utensils"></i><span>{{ restaurant_name }}</span></div>
+        <nav class="admin-sidebar-nav">
+            <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="{{ url_for('admin_menu') }}"><i class="fas fa-utensils"></i> <span>Menu</span></a>
+            <a href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
+            <a href="{{ url_for('admin_reservations') }}"><i class="fas fa-calendar-alt"></i> <span>Reservations</span></a>
+            <a href="{{ url_for('admin_promo_codes') }}"><i class="fas fa-tag"></i> <span>Promo Codes</span></a>
+            <a href="{{ url_for('admin_gift_cards') }}"><i class="fas fa-gift"></i> <span>Gift Cards</span></a>
+            <a href="{{ url_for('admin_messages') }}"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+            <a href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> <span>Reviews</span></a>
+            <a href="{{ url_for('admin_faq') }}" class="active"><i class="fas fa-question-circle"></i> <span>FAQ</span></a>
+            <a href="{{ url_for('admin_gallery') }}"><i class="fas fa-camera"></i> <span>Gallery</span></a>
+            <a href="{{ url_for('admin_admins') }}"><i class="fas fa-users-cog"></i> <span>Admins</span></a>
+            <a href="{{ url_for('admin_newsletter') }}"><i class="fas fa-newspaper"></i> <span>Newsletter</span></a>
+            <a href="{{ url_for('index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> <span>Website</span></a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="admin-main">
+        <div class="admin-header"><h1><i class="fas fa-question-circle" style="color:var(--gold);"></i> FAQ Management</h1></div>
+        <div class="admin-card">
+            <h2><i class="fas fa-plus-circle" style="color:var(--gold);"></i> Add FAQ</h2>
+            <form method="POST" action="{{ url_for('admin_add_faq') }}">
+                <div class="form-group"><label>Question *</label><input type="text" name="question" required placeholder="Enter the question"></div>
+                <div class="form-group"><label>Answer *</label><textarea name="answer" required placeholder="Enter the answer" rows="4"></textarea></div>
+                <div class="form-group"><label>Category</label><input type="text" name="category" value="General" placeholder="e.g., Orders, Menu, Events"></div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add FAQ</button>
+            </form>
+        </div>
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+            <table class="admin-table">
+                <thead><tr><th>Question</th><th>Category</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for f in faqs %}
+                    <tr>
+                        <td><strong>{{ f.question[:80] }}{% if f.question|length > 80 %}...{% endif %}</strong><br><small style="color:var(--gray-500);">{{ f.answer[:100] }}...</small></td>
+                        <td><span class="admin-badge" style="background:var(--gold-light);color:var(--brown);">{{ f.category }}</span></td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_delete_faq', id=f.id) }}" onsubmit="return confirm('Delete?')"><button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+{% endblock %}
