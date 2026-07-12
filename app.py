@@ -478,7 +478,19 @@ def catering():
 
 @app.route('/health')
 def health_check():
-    return jsonify({'status': 'ok', 'service': RESTAURANT_NAME})
+    """Health check that also verifies database connectivity."""
+    db_ok = False
+    try:
+        # Quick DB ping
+        db.session.execute(db.text('SELECT 1'))
+        db_ok = True
+    except Exception:
+        pass
+    return jsonify({
+        'status': 'ok' if db_ok else 'degraded',
+        'database': 'connected' if db_ok else 'connecting',
+        'service': RESTAURANT_NAME
+    })
 
 
 @app.route('/api/upload', methods=['POST'])
@@ -1014,9 +1026,15 @@ def seed_database():
     db.session.commit()
 
 # Initialize database tables and seed data on startup (for Render/gunicorn)
+# Startup: create tables and seed data (with error handling for Render/free tier)
 with app.app_context():
-    db.create_all()
-    seed_database()
+    try:
+        db.create_all()
+        seed_database()
+        print("✓ Database tables created and seeded successfully")
+    except Exception as e:
+        print(f"⚠ Database init warning (app will still start): {e}")
+        # Tables might already exist, or DB might not be ready yet
 
 if __name__ == '__main__':
     app.run(debug=True)

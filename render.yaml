@@ -1,16 +1,27 @@
+# ─── Free PostgreSQL Database (Render Managed) ───
+# Render automatically creates a free PostgreSQL database and injects DATABASE_URL
+# ─── Free PostgreSQL Database (Render Managed) ───
+databases:
+  - name: spice-garden-db
+    databaseName: spice_garden
+    region: singapore
+    plan: free
+
 services:
   - type: web
     name: spice-garden
     runtime: python
-    region: singapore  # closest to Pakistan
+    region: singapore
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false  # user will provide Neon/Supabase DB URL
+        fromDatabase:
+          name: spice-garden-db
+          property: connectionString
       - key: PYTHON_VERSION
         value: 3.11.0
-    healthCheckPath: /health
-    autoDeploy: true
